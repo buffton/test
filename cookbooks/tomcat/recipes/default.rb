@@ -24,15 +24,28 @@ directory '/opt/tomcat' do
   group 'tomcat'
 end
 
-execute 'tar xvf apache-tomcat-8*tar.gz -C /opt/tomcat --strip-components=1'
+execute 'extract_tomcat' do
+  command 'tar xvf /apache-tomcat-8.5.34.tar.gz --strip-components=1'
+  cwd '/opt/tomcat'
+  not_if { File.exists?("/opt/tomcat/conf")}
+end
+
+%w[ /opt/tomcat /opt/tomcat/conf /opt/tomcat/webapps/ /opt/tomcat/work/ /opt/tomcat/temp/ /opt/tomcat/logs/ ].each do |path|
+  directory path do
+    group 'tomcat'
+    user 'tomcat'
+    mode '0750'
+    recursive true
+  end
+end
 
 execute 'chgrp -R tomcat /opt/tomcat/'
 
 execute 'chmod -R g+r /opt/tomcat/conf'
 
-execute 'chmod g+x /opt/tomcat/conf'
+# execute 'chmod g+x /opt/tomcat/conf'
 
-execute 'chown -R tomcat /opt/tomcat/webapps/ /opt/tomcat/work/ /opt/tomcat/temp/ /opt/tomcat/logs/'
+# execute 'chown -R tomcat /opt/tomcat/webapps/ /opt/tomcat/work/ /opt/tomcat/temp/ /opt/tomcat/logs/'
 
 template '/etc/systemd/system/tomcat.service' do
   source 'tomcat.service.erb'
